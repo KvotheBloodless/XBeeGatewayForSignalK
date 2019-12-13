@@ -17,75 +17,72 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
 
-import au.com.venilia.xbee_gateway_for_signalk.event.SwitchStatusRequestEvent;
 import au.com.venilia.xbee_gateway_for_signalk.service.XBeeService;
 
 @Service
 public class XBeeServiceImpl implements XBeeService, SerialPortDataListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(XBeeServiceImpl.class);
+	private static final Logger LOG = LoggerFactory.getLogger(XBeeServiceImpl.class);
 
-    private SerialPort xBeePort;
+	private SerialPort xBeePort;
 
-    private final static String REQUEST_SWITCH_STATUS_UPDATE_COMMAND = "?";
+	private final static String REQUEST_SWITCH_STATUS_UPDATE_COMMAND = "?";
 
-    @Autowired
-    private ApplicationEventPublisher publisher;
+	@Autowired
+	private ApplicationEventPublisher publisher;
 
-    @Value("${xbee.portDescriptor}")
-    private String portDescriptor;
+	@Value("${xbee.portDescriptor}")
+	private String portDescriptor;
 
-    @Value("${xbee.baudRate:9600}")
-    private int baudRate;
+	@Value("${xbee.baudRate:9600}")
+	private int baudRate;
 
-    @PostConstruct
-    private boolean init() {
+	@PostConstruct
+	private boolean init() {
 
-        xBeePort = SerialPort.getCommPort(portDescriptor);
-        xBeePort.setBaudRate(baudRate);
+		xBeePort = SerialPort.getCommPort(portDescriptor);
+		xBeePort.setBaudRate(baudRate);
 
-        if (!xBeePort.openPort()) {
+		if (!xBeePort.openPort()) {
 
-            LOG.error("Could not open connection to xBee on {} with baud rate {}", portDescriptor, baudRate);
-            LOG.info("Available ports are:\n{}",
-                    StringUtils.collectionToDelimitedString(Arrays.asList(SerialPort.getCommPorts())
-                            .stream()
-                            .map(p -> String.format("%s <%s>", p.getPortDescription(), p.getDescriptivePortName()))
-                            .collect(Collectors.toList()), "\n"));
+			LOG.error("Could not open connection to xBee on {} with baud rate {}", portDescriptor, baudRate);
+			LOG.info("Available ports are:\n{}",
+					StringUtils.collectionToDelimitedString(Arrays.asList(SerialPort.getCommPorts()).stream()
+							.map(p -> String.format("%s <%s>", p.getPortDescription(), p.getDescriptivePortName()))
+							.collect(Collectors.toList()), "\n"));
 
-            return false;
-        } else {
+			return false;
+		} else {
 
-            LOG.info("xBee port is open - {}", xBeePort.getDescriptivePortName());
-        }
+			LOG.info("xBee port is open - {}", xBeePort.getDescriptivePortName());
+		}
 
-        xBeePort.addDataListener(this);
-        return true;
-    }
+		xBeePort.addDataListener(this);
+		return true;
+	}
 
-    @Override
-    public void write(final byte[] buf) {
+	@Override
+	public void write(final byte[] buf) {
 
-        if (!xBeePort.isOpen())
-            init();
+		if (!xBeePort.isOpen())
+			init();
 
-        xBeePort.writeBytes(buf, buf.length);
-        LOG.debug("Wrote {} bytes: [{}]", buf.length, new String(buf));
-    }
+		xBeePort.writeBytes(buf, buf.length);
+		LOG.debug("Wrote {} bytes: [{}]", buf.length, new String(buf));
+	}
 
-    @Override
-    public int getListeningEvents() {
+	@Override
+	public int getListeningEvents() {
 
-        return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
-    }
+		return SerialPort.LISTENING_EVENT_DATA_RECEIVED;
+	}
 
-    @Override
-    public void serialEvent(final SerialPortEvent event) {
+	@Override
+	public void serialEvent(final SerialPortEvent event) {
 
-        final byte[] data = event.getReceivedData();
-        LOG.info("Received {} bytes from xBee: {}", data.length, new String(data));
+		final byte[] data = event.getReceivedData();
+		LOG.info("Received {} bytes from xBee: {}", data.length, new String(data));
 
-        if (new String(data).equals(REQUEST_SWITCH_STATUS_UPDATE_COMMAND))
-            publisher.publishEvent(new SwitchStatusRequestEvent(xBeePort));
-    }
+		// TODO
+	}
 }

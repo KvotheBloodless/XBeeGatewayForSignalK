@@ -2,97 +2,102 @@ package au.com.venilia.xbee_gateway_for_signalk.util;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Optional;
 
 import javax.annotation.PreDestroy;
 import javax.websocket.ContainerProvider;
 import javax.websocket.DeploymentException;
 import javax.websocket.WebSocketContainer;
 
+import org.glassfish.tyrus.client.ClientManager;
+import org.glassfish.tyrus.client.ClientProperties;
+import org.glassfish.tyrus.client.SslContextConfigurator;
+import org.glassfish.tyrus.client.SslEngineConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import au.com.venilia.xbee_gateway_for_signalk.util.SignalKClient.SignalKPath;
-
 public class SignalKClientManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SignalKClientManager.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SignalKClientManager.class);
 
-    private SignalKClient client;
-    private long connectDelay;
+	private SignalKClient client;
+	private long connectDelay;
 
-    private Thread maintainConnectionThread;
-    private boolean maintainConnection = true;
+	private Thread maintainConnectionThread;
+	private boolean maintainConnection = true;
 
-    private boolean keepTrying = true;
+	private boolean keepTrying = true;
 
-    private URI endpointUri;
+	private URI endpointUri;
 
-    public SignalKClientManager(final SignalKClient client, final long connectDelay) {
+	public SignalKClientManager(final SignalKClient client, final long connectDelay) {
 
-        this.client = client;
-        this.connectDelay = connectDelay;
-    }
+		this.client = client;
+		this.connectDelay = connectDelay;
 
-    public void setEndpointUri(final URI endpointUri) {
+		final ClientManager c = ClientManager.createClient();
 
-        this.endpointUri = endpointUri;
-        openConnection();
-    }
+		SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(new SslContextConfigurator());
+		sslEngineConfigurator.setHostVerificationEnabled(false);
 
-    private void openConnection() {
+		c.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
+	}
 
-        if (maintainConnection) {
+	public void setEndpointUri(final URI endpointUri) {
 
-            maintainConnectionThread = new Thread(new Runnable() {
+		this.endpointUri = endpointUri;
+		openConnection();
+	}
 
-                @Override
-                public void run() {
+	private void openConnection() {
 
-                    keepTrying = true;
+		if (maintainConnection) {
 
-                    while (keepTrying)
+			maintainConnectionThread = new Thread(new Runnable() {
 
-                        try {
+				@Override
+				public void run() {
 
-                            Thread.sleep(connectDelay);
+					keepTrying = true;
 
-                            LOG.info("Opening websocket to SignalK server at {}", endpointUri);
+					while (keepTrying)
 
-                            final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-                            container.connectToServer(client, endpointUri);
+						try {
 
-                            LOG.info("Successfully opened websocket to SignalK server at {}", endpointUri);
+							Thread.sleep(connectDelay);
 
-                            for (final SignalKPath value : SignalKPath.values())
-                                if (value.subscribe())
-                                    client.subscribe(value, Optional.empty(), value.getMinPeriod());
+							LOG.info("Opening websocket to SignalK server at {}", endpointUri);
 
-                            keepTrying = false;
-                        } catch (final DeploymentException | IOException e) {
+							final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+							container.connectToServer(client, endpointUri);
 
-                            LOG.warn("{} was thrown attempting to open SignalK socket", e.getClass().getSimpleName());
-                            // e.printStackTrace();
-                        } catch (final InterruptedException e) {
+							LOG.info("Successfully opened websocket to SignalK server at {}", endpointUri);
 
-                            keepTrying = false;
-                            LOG.info("Thread to open SignalK socket has been interrupted");
-                        }
-                }
-            });
-            maintainConnectionThread.start();
-        }
-    }
+							keepTrying = false;
+						} catch (final DeploymentException | IOException e) {
 
-    @PreDestroy
-    public void destroy() {
+							LOG.warn("{} was thrown attempting to open SignalK socket - {}",
+									e.getClass().getSimpleName(), e.getMessage(), e);
+							// e.printStackTrace();
+						} catch (final InterruptedException e) {
 
-        LOG.info(String.format("Shutting down %s", this.getClass().getSimpleName()));
-        maintainConnection = false;
+							keepTrying = false;
+							LOG.info("Thread to open SignalK socket has been interrupted");
+						}
+				}
+			});
+			maintainConnectionThread.start();
+		}
+	}
 
-        keepTrying = false;
+	@PreDestroy
+	public void destroy() {
 
-        if (maintainConnectionThread != null && maintainConnectionThread.isAlive())
-            maintainConnectionThread.interrupt();
-    }
+		LOG.info(String.format("Shutting down %s", this.getClass().getSimpleName()));
+		maintainConnection = false;
+
+		keepTrying = false;
+
+		if (maintainConnectionThread != null && maintainConnectionThread.isAlive())
+			maintainConnectionThread.interrupt();
+	}
 }

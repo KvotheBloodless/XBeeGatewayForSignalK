@@ -4,33 +4,31 @@ import org.springframework.context.ApplicationEvent;
 
 import com.google.common.base.MoreObjects;
 
-import au.com.venilia.xbee_gateway_for_signalk.util.SignalKClient.SignalKPath;
-
 public class SignalKMessageEvent extends ApplicationEvent {
 
-    private final SignalKPath path;
-    private final Object value;
+	private final String path;
+	private final Object value;
 
-    public SignalKMessageEvent(final String source, final SignalKPath path, final Object value) {
+	public SignalKMessageEvent(final String source, final String path, final Object value) {
 
-        super(source);
-        this.path = path;
-        this.value = value;
-    }
+		super(source);
+		this.path = path;
+		this.value = value;
+	}
 
-    public String getPath() {
+	public String getPath() {
 
-        return path.path();
-    }
+		return path;
+	}
 
-    public Object getValue() {
+	public Object getValue() {
 
-        return value;
-    }
+		return value;
+	}
 
-    @Override
-    public String toString() {
+	@Override
+	public String toString() {
 
-        return MoreObjects.toStringHelper(this).add("source", source).add("path", path).add("value", value).toString();
-    }
+		return MoreObjects.toStringHelper(this).add("source", source).add("path", path).add("value", value).toString();
+	}
 }
