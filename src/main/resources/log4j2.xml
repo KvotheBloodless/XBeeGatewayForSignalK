@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="WARN"
+	xmlns:xi="http://www.w3.org/2001/XInclude">
+
+	<Appenders>
+
+		<Console name="application" target="SYSTEM_OUT">
+			<PatternLayout
+				pattern="%date{ISO8601}{GMT+0} %style{(%t)}{yellow} --- %highlight{%-5level} - %style{%-40.40logger{39}}{cyan} : %style{%m%n}{white}" />
+		</Console>
+
+	</Appenders>
+
+	<Loggers>
+
+		<Logger name="au.com.venilia.xbee_gateway_for_signalk"
+			level="trace" additivity="false">
+			<AppenderRef ref="application" />
+		</Logger>
+
+		<Root level="info" includeLocation="true">
+			<AppenderRef ref="application" />
+		</Root>
+
+	</Loggers>
+
+</Configuration>
