@@ -62,7 +62,7 @@ public class SignalKClient {
 		outgoingQueue = new LinkedBlockingDeque<>();
 	}
 
-	@EventListener(classes = { XBeeMessageEvent.class }, condition = "#event.nodeId == #this.nodeId")
+	@EventListener(classes = { XBeeMessageEvent.class }, condition = "#{event.noddfeId == this.nodeId}")
 	private void xBeeMessage(final XBeeMessageEvent event) throws JsonProcessingException {
 
 		outgoingQueue.add(event.getData());

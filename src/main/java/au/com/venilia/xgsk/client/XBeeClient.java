@@ -85,7 +85,7 @@ public class XBeeClient implements IDataReceiveListener {
 		}).start();
 	}
 
-	@EventListener(classes = { SignalKMessageEvent.class }, condition = "#event.nodeId == #this.device.getNodeID()")
+	@EventListener(classes = { SignalKMessageEvent.class }, condition = "#{event.nodeId == this.device.getNodeID()}")
 	private void send(final SignalKMessageEvent event) {
 
 		outgoingQueue.add(event.getData());
