@@ -19,9 +19,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import au.com.venilia.xgsk.service.XbeeNetworkDiscoveryService;
-import au.com.venilia.xgsk.util.SignalKClientFactory;
-import au.com.venilia.xgsk.util.XBeeClientFactory;
+import au.com.venilia.xgsk.client.SignalKClient.SignalKClientFactory;
+import au.com.venilia.xgsk.client.XBeeClient.XBeeClientFactory;
+import au.com.venilia.xgsk.service.XBeeNetworkDiscoveryService;
 
 @Configuration
 @ComponentScan("au.com.venilia.xgsk")
@@ -36,7 +36,7 @@ public class AppConfig {
 	@Bean
 	public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
 
-		LOG.info("Initialising task scheduler");
+		LOG.info("Initialising ThreadPoolTaskScheduler");
 
 		ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
 
@@ -52,7 +52,7 @@ public class AppConfig {
 	@Bean(name = SIGNALK_OBJECTMAPPER)
 	public ObjectMapper signalKObjectMapper() {
 
-		LOG.info("Initialising signalk object mapper");
+		LOG.info("Initialising signalk ObjectMapper");
 
 		final ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.setDefaultPropertyInclusion(Include.NON_EMPTY);
@@ -65,7 +65,7 @@ public class AppConfig {
 	@Bean(name = XBEE_OBJECTMAPPER)
 	public ObjectMapper xbeeObjectMapper() {
 
-		LOG.info("Initialising xbee object mapper");
+		LOG.info("Initialising xbee ObjectMapper");
 
 		final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
 		objectMapper.setDefaultPropertyInclusion(Include.NON_EMPTY);
@@ -80,14 +80,18 @@ public class AppConfig {
 	public SignalKClientFactory signalKClientFactory(final ApplicationEventPublisher eventPublisher)
 			throws URISyntaxException {
 
-		return new SignalKClientFactory(new URI(signalKEndpoint), eventPublisher, signalKObjectMapper());
+		LOG.info("Initialising SignalKClientFactory");
+
+		return SignalKClientFactory.instance(new URI(signalKEndpoint), eventPublisher, signalKObjectMapper());
 	}
 
 	@Bean
-	public XBeeClientFactory xbeeClientFactory(final XbeeNetworkDiscoveryService xbeeNetworkDiscoveryService,
+	public XBeeClientFactory xbeeClientFactory(final XBeeNetworkDiscoveryService xbeeNetworkDiscoveryService,
 			final ApplicationEventPublisher eventPublisher, final RetryTemplate retryTemplate) {
 
-		return new XBeeClientFactory(xbeeNetworkDiscoveryService.getLocalInstance(), eventPublisher, xbeeObjectMapper(),
-				retryTemplate);
+		LOG.info("Initialising XBeeClientFactory");
+
+		return XBeeClientFactory.instance(xbeeNetworkDiscoveryService.getLocalInstance(), eventPublisher,
+				xbeeObjectMapper(), retryTemplate);
 	}
 }

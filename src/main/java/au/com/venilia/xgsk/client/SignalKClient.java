@@ -1,15 +1,19 @@
-package au.com.venilia.xgsk.util;
+package au.com.venilia.xgsk.client;
 
 import java.io.IOException;
+import java.net.URI;
 
 import javax.annotation.PreDestroy;
 import javax.websocket.ClientEndpoint;
 import javax.websocket.CloseReason;
 import javax.websocket.CloseReason.CloseCodes;
+import javax.websocket.ContainerProvider;
+import javax.websocket.DeploymentException;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
+import javax.websocket.WebSocketContainer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +29,7 @@ import au.com.venilia.xgsk.event.XBeeMessageEvent;
 @ClientEndpoint
 public class SignalKClient {
 
-	private static final Logger LOG = LoggerFactory.getLogger(SignalKClient.class);
+	private final Logger log;
 
 	public final static String SELF = "vessels.self";
 
@@ -35,12 +39,12 @@ public class SignalKClient {
 
 	private Session userSession = null;
 
-	private boolean scrolling = false;
-
 	private final String nodeId;
 
 	public SignalKClient(final String nodeId, final ApplicationEventPublisher eventPublisher,
 			final ObjectMapper objectMapper) {
+
+		this.log = LoggerFactory.getLogger(String.format("%s (%s)", getClass().getName(), nodeId));
 
 		this.nodeId = nodeId;
 
@@ -53,7 +57,7 @@ public class SignalKClient {
 
 		final String json = objectMapper.writeValueAsString(event.getData());
 
-		LOG.trace("Sending message: {}", json);
+		log.trace("Sending message: {}", json);
 		this.userSession.getAsyncRemote().sendText(json);
 	}
 
@@ -72,14 +76,14 @@ public class SignalKClient {
 	@OnMessage
 	public void onMessage(final String message) {
 
-		if (!message.trim().isEmpty() && !scrolling) {
+		if (!message.trim().isEmpty()) {
 
 			try {
 
 				eventPublisher.publishEvent(new SignalKMessageEvent(nodeId, objectMapper.readTree(message.trim())));
 			} catch (final JsonProcessingException e) {
 
-				LOG.error("{} thrown on receipt of SignalK message", e.getClass().getSimpleName(), e);
+				log.error("{} thrown on receipt of SignalK message", e.getClass().getSimpleName(), e);
 			}
 		}
 	}
@@ -87,15 +91,58 @@ public class SignalKClient {
 	@PreDestroy
 	public void destroy() {
 
-		LOG.info(String.format("Shutting down %s", this.getClass().getSimpleName()));
+		log.info("Shutting down SignalKClient");
+
 		if (userSession != null && userSession.isOpen())
 			try {
 
 				userSession.close(new CloseReason(CloseCodes.NORMAL_CLOSURE, "Shutting down"));
 			} catch (IOException e) {
 
-				LOG.warn("An {} was thrown attempting to close SignalK socket - {}", e.getClass().getSimpleName(),
+				log.warn("An {} was thrown attempting to close SignalK socket - {}", e.getClass().getSimpleName(),
 						e.getMessage());
 			}
+	}
+
+	public static class SignalKClientFactory {
+
+		private static final Logger LOG = LoggerFactory.getLogger(SignalKClientFactory.class);
+
+		private static SignalKClientFactory INSTANCE;
+
+		private final URI endpointUri;
+		private final ApplicationEventPublisher eventPublisher;
+		private final ObjectMapper objectMapper;
+
+		public static SignalKClientFactory instance(final URI endpointUri,
+				final ApplicationEventPublisher eventPublisher, final ObjectMapper objectMapper) {
+
+			if (INSTANCE == null)
+				INSTANCE = new SignalKClientFactory(endpointUri, eventPublisher, objectMapper);
+
+			return INSTANCE;
+		}
+
+		protected SignalKClientFactory(final URI endpointUri, final ApplicationEventPublisher eventPublisher,
+				final ObjectMapper objectMapper) {
+
+			this.endpointUri = endpointUri;
+			this.eventPublisher = eventPublisher;
+			this.objectMapper = objectMapper;
+		}
+
+		public SignalKClient client(final String peerId) throws DeploymentException, IOException {
+
+			final SignalKClient client = new SignalKClient(peerId, eventPublisher, objectMapper);
+
+			LOG.info("Opening websocket to SignalK server at {}", endpointUri);
+
+			final WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+			container.connectToServer(client, endpointUri);
+
+			LOG.info("Successfully opened websocket to SignalK server at {}", endpointUri);
+
+			return client;
+		}
 	}
 }
