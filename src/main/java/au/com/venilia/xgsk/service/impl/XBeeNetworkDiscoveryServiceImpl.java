@@ -6,10 +6,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.websocket.DeploymentException;
 
-import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +26,8 @@ import com.digi.xbee.api.exceptions.XBeeException;
 import com.digi.xbee.api.listeners.IDiscoveryListener;
 import com.google.common.collect.Maps;
 
-import au.com.venilia.xgsk.client.SignalKClient;
+import au.com.venilia.xgsk.client.ClientTuple;
 import au.com.venilia.xgsk.client.SignalKClient.SignalKClientFactory;
-import au.com.venilia.xgsk.client.XBeeClient;
 import au.com.venilia.xgsk.client.XBeeClient.XBeeClientFactory;
 import au.com.venilia.xgsk.service.XBeeNetworkDiscoveryService;
 
@@ -47,13 +47,13 @@ public class XBeeNetworkDiscoveryServiceImpl implements XBeeNetworkDiscoveryServ
 	@Autowired
 	private TaskScheduler scheduler;
 
-	@Value("${xbee.discovery.interval:10}")
+	@Value("${xbee.discovery.interval:30}")
 	private long discoveryRunDelaySeconds;
 
 	private XBeeDevice localInstance;
 	private XBeeNetwork network;
 
-	private final Map<String, Triple<RemoteXBeeDevice, SignalKClient, XBeeClient>> peers;
+	private final Map<String, Pair<RemoteXBeeDevice, ClientTuple>> peers;
 
 	@Autowired
 	public XBeeNetworkDiscoveryServiceImpl(@Value("${xbee.portDescriptor}") final String serialDescriptor,
@@ -64,10 +64,9 @@ public class XBeeNetworkDiscoveryServiceImpl implements XBeeNetworkDiscoveryServ
 		localInstance = new XBeeDevice(serialDescriptor, baudRate);
 
 		peers = Maps.newHashMap();
-
-		init();
 	}
 
+	@PostConstruct
 	private void init() {
 
 		try {
@@ -83,7 +82,11 @@ public class XBeeNetworkDiscoveryServiceImpl implements XBeeNetworkDiscoveryServ
 
 					try {
 
-						performDiscovery();
+						if (!network.isDiscoveryRunning()) {
+
+							LOG.info("Performing discovery");
+							performDiscovery();
+						}
 					} catch (final XBeeException e) {
 
 						LOG.error("A {} was thrown during discovery - {}", e.getClass().getSimpleName(), e.getMessage(),
@@ -126,8 +129,9 @@ public class XBeeNetworkDiscoveryServiceImpl implements XBeeNetworkDiscoveryServ
 					try {
 
 						peers.put(discoveredDevice.getNodeID(),
-								Triple.of(discoveredDevice, signalKClientFactory.client(discoveredDevice.getNodeID()),
-										xBeeClientFactory.client(discoveredDevice)));
+								Pair.of(discoveredDevice,
+										ClientTuple.of(signalKClientFactory.client(discoveredDevice.getNodeID()),
+												xBeeClientFactory.client(discoveredDevice))));
 					} catch (final DeploymentException | IOException e) {
 
 						LOG.error("{} thrown during setup of new bridge", e.getClass().getSimpleName(), e);
@@ -190,10 +194,10 @@ public class XBeeNetworkDiscoveryServiceImpl implements XBeeNetworkDiscoveryServ
 	@PreDestroy
 	private void shutdown() {
 
-		final Iterator<Triple<RemoteXBeeDevice, SignalKClient, XBeeClient>> peerIterator = peers.values().iterator();
+		final Iterator<Pair<RemoteXBeeDevice, ClientTuple>> peerIterator = peers.values().iterator();
 		while (peerIterator.hasNext()) {
 
-			final Triple<RemoteXBeeDevice, SignalKClient, XBeeClient> peer = peerIterator.next();
+			final Pair<RemoteXBeeDevice, ClientTuple> peer = peerIterator.next();
 
 			// TODO: Test if we need to call these
 			// peer.getMiddle().destroy();

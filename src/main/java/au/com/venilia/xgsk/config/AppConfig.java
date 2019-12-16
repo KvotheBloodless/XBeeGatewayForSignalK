@@ -7,7 +7,6 @@ import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -77,22 +76,20 @@ public class AppConfig {
 	private String signalKEndpoint;
 
 	@Bean
-	public SignalKClientFactory signalKClientFactory(final ApplicationEventPublisher eventPublisher,
-			final RetryTemplate retryTemplate) throws URISyntaxException {
+	public SignalKClientFactory signalKClientFactory(final RetryTemplate retryTemplate) throws URISyntaxException {
 
 		LOG.info("Initialising SignalKClientFactory");
 
-		return SignalKClientFactory.instance(new URI(signalKEndpoint), eventPublisher, signalKObjectMapper(),
-				retryTemplate);
+		return SignalKClientFactory.instance(new URI(signalKEndpoint), signalKObjectMapper(), retryTemplate);
 	}
 
 	@Bean
 	public XBeeClientFactory xbeeClientFactory(final XBeeNetworkDiscoveryService xbeeNetworkDiscoveryService,
-			final ApplicationEventPublisher eventPublisher, final RetryTemplate retryTemplate) {
+			final RetryTemplate retryTemplate) {
 
 		LOG.info("Initialising XBeeClientFactory");
 
-		return XBeeClientFactory.instance(xbeeNetworkDiscoveryService.getLocalInstance(), eventPublisher,
-				xbeeObjectMapper(), retryTemplate);
+		return XBeeClientFactory.instance(xbeeNetworkDiscoveryService.getLocalInstance(), xbeeObjectMapper(),
+				retryTemplate);
 	}
 }

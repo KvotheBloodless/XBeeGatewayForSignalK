@@ -18,8 +18,6 @@ import javax.websocket.WebSocketContainer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.support.RetryTemplate;
 
@@ -27,17 +25,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import au.com.venilia.xgsk.event.SignalKMessageEvent;
-import au.com.venilia.xgsk.event.XBeeMessageEvent;
-
 @ClientEndpoint
 public class SignalKClient {
 
 	private final Logger log;
 
 	private final String nodeId;
-
-	private final ApplicationEventPublisher eventPublisher;
 
 	private final ObjectMapper objectMapper;
 
@@ -48,24 +41,23 @@ public class SignalKClient {
 
 	private volatile boolean run = true;
 
-	public SignalKClient(final String nodeId, final ApplicationEventPublisher eventPublisher,
-			final ObjectMapper objectMapper, final RetryTemplate retryTemplate) {
+	private XBeeClient xBeeClient;
+
+	public SignalKClient(final String nodeId, final ObjectMapper objectMapper, final RetryTemplate retryTemplate) {
 
 		this.log = LoggerFactory.getLogger(String.format("%s (%s)", getClass().getName(), nodeId));
 
 		this.nodeId = nodeId;
 
-		this.eventPublisher = eventPublisher;
 		this.objectMapper = objectMapper;
 		this.retryTemplate = retryTemplate;
 
 		outgoingQueue = new LinkedBlockingDeque<>();
 	}
 
-	@EventListener(classes = { XBeeMessageEvent.class }, condition = "#{event.noddfeId == this.nodeId}")
-	private void xBeeMessage(final XBeeMessageEvent event) throws JsonProcessingException {
+	public void xBeeMessage(final JsonNode message) throws JsonProcessingException {
 
-		outgoingQueue.add(event.getData());
+		outgoingQueue.add(message);
 	}
 
 	@OnOpen
@@ -108,13 +100,16 @@ public class SignalKClient {
 	}
 
 	@OnMessage
-	public void onMessage(final String message) {
+	public void onMessage(final String data) {
 
-		if (!message.trim().isEmpty()) {
+		if (!data.trim().isEmpty()) {
 
 			try {
 
-				eventPublisher.publishEvent(new SignalKMessageEvent(nodeId, objectMapper.readTree(message.trim())));
+				final JsonNode message = objectMapper.readTree(data.trim());
+				log.debug("Message received: {}", message);
+
+				xBeeClient.signalKMessage(message);
 			} catch (final JsonProcessingException e) {
 
 				log.error("{} thrown on receipt of SignalK message", e.getClass().getSimpleName(), e);
@@ -147,25 +142,22 @@ public class SignalKClient {
 		private static SignalKClientFactory INSTANCE;
 
 		private final URI endpointUri;
-		private final ApplicationEventPublisher eventPublisher;
 		private final ObjectMapper objectMapper;
 		private final RetryTemplate retryTemplate;
 
-		public static SignalKClientFactory instance(final URI endpointUri,
-				final ApplicationEventPublisher eventPublisher, final ObjectMapper objectMapper,
+		public static SignalKClientFactory instance(final URI endpointUri, final ObjectMapper objectMapper,
 				final RetryTemplate retryTemplate) {
 
 			if (INSTANCE == null)
-				INSTANCE = new SignalKClientFactory(endpointUri, eventPublisher, objectMapper, retryTemplate);
+				INSTANCE = new SignalKClientFactory(endpointUri, objectMapper, retryTemplate);
 
 			return INSTANCE;
 		}
 
-		protected SignalKClientFactory(final URI endpointUri, final ApplicationEventPublisher eventPublisher,
-				final ObjectMapper objectMapper, final RetryTemplate retryTemplate) {
+		protected SignalKClientFactory(final URI endpointUri, final ObjectMapper objectMapper,
+				final RetryTemplate retryTemplate) {
 
 			this.endpointUri = endpointUri;
-			this.eventPublisher = eventPublisher;
 			this.objectMapper = objectMapper;
 			this.retryTemplate = retryTemplate;
 		}
@@ -174,7 +166,7 @@ public class SignalKClient {
 
 			LOG.info("Creating SignalKClient for node {}", nodeId);
 
-			final SignalKClient client = new SignalKClient(nodeId, eventPublisher, objectMapper, retryTemplate);
+			final SignalKClient client = new SignalKClient(nodeId, objectMapper, retryTemplate);
 
 			LOG.debug("Opening websocket to SignalK server at {} for node {}", endpointUri, nodeId);
 
@@ -185,5 +177,10 @@ public class SignalKClient {
 
 			return client;
 		}
+	}
+
+	public void setXBeeClient(final XBeeClient xBeeClient) {
+
+		this.xBeeClient = xBeeClient;
 	}
 }
