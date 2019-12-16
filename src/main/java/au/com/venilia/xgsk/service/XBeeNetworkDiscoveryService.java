@@ -16,5 +16,5 @@ public interface XBeeNetworkDiscoveryService {
 	 * 
 	 * @param nodeID the node identifier
 	 */
-	public void failedNode(final String nodeID);
+	public void evictNode(final String nodeID);
 }

@@ -37,6 +37,8 @@ public class XBeeClient implements IDataReceiveListener {
 
 	private final BlockingQueue<JsonNode> outgoingQueue;
 
+	private volatile boolean run = true;
+
 	public XBeeClient(final XBeeDevice localDevice, final RemoteXBeeDevice device,
 			final ApplicationEventPublisher eventPublisher, final ObjectMapper objectMapper,
 			final RetryTemplate retryTemplate) {
@@ -54,7 +56,7 @@ public class XBeeClient implements IDataReceiveListener {
 			@Override
 			public void run() {
 
-				while (true)
+				while (run)
 					try {
 
 						final JsonNode jsonNode = outgoingQueue.take();
@@ -71,9 +73,6 @@ public class XBeeClient implements IDataReceiveListener {
 								return null;
 							} catch (final XBeeException | JsonProcessingException e) {
 
-								// TODO: if this fails permanently, we need to shutdown comms with the device
-								// and clenup
-
 								// If this fails permanently, the logging will be handled by the RetryListener
 								throw new RuntimeException(e);
 							}
@@ -86,7 +85,7 @@ public class XBeeClient implements IDataReceiveListener {
 		}).start();
 	}
 
-	@EventListener(classes = { SignalKMessageEvent.class }, condition = "el base on device.peerId")
+	@EventListener(classes = { SignalKMessageEvent.class }, condition = "#event.nodeId == device.getNodeID()")
 	private void send(final SignalKMessageEvent event) {
 
 		outgoingQueue.add(event.getData());
@@ -109,6 +108,8 @@ public class XBeeClient implements IDataReceiveListener {
 	public void destroy() {
 
 		log.info("Shutting down XBeeClient");
+
+		run = false;
 	}
 
 	public static class XBeeClientFactory {
@@ -144,6 +145,8 @@ public class XBeeClient implements IDataReceiveListener {
 		}
 
 		public XBeeClient client(final RemoteXBeeDevice device) {
+
+			LOG.info("Creating XBeeClient for node {}", device.getNodeID());
 
 			return new XBeeClient(localDevice, device, eventPublisher, objectMapper, retryTemplate);
 		}

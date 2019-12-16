@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,6 @@ import au.com.venilia.xgsk.client.SignalKClient;
 import au.com.venilia.xgsk.client.SignalKClient.SignalKClientFactory;
 import au.com.venilia.xgsk.client.XBeeClient;
 import au.com.venilia.xgsk.client.XBeeClient.XBeeClientFactory;
-import au.com.venilia.xgsk.event.XbeePeerDetectionEvent;
 import au.com.venilia.xgsk.service.XBeeNetworkDiscoveryService;
 
 @Service
@@ -48,9 +46,6 @@ public class XBeeNetworkDiscoveryServiceImpl implements XBeeNetworkDiscoveryServ
 
 	@Autowired
 	private TaskScheduler scheduler;
-
-	@Autowired
-	private ApplicationEventPublisher eventPublisher;
 
 	@Value("${xbee.discovery.interval:10}")
 	private long discoveryRunDelaySeconds;
@@ -133,8 +128,6 @@ public class XBeeNetworkDiscoveryServiceImpl implements XBeeNetworkDiscoveryServ
 						peers.put(discoveredDevice.getNodeID(),
 								Triple.of(discoveredDevice, signalKClientFactory.client(discoveredDevice.getNodeID()),
 										xBeeClientFactory.client(discoveredDevice)));
-
-						eventPublisher.publishEvent(new XbeePeerDetectionEvent(this, discoveredDevice));
 					} catch (final DeploymentException | IOException e) {
 
 						LOG.error("{} thrown during setup of new bridge", e.getClass().getSimpleName(), e);
@@ -189,7 +182,7 @@ public class XBeeNetworkDiscoveryServiceImpl implements XBeeNetworkDiscoveryServ
 	}
 
 	@Override
-	public void failedNode(String nodeID) {
+	public void evictNode(String nodeID) {
 
 		peers.remove(nodeID);
 	}

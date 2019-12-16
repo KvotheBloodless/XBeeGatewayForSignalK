@@ -77,12 +77,13 @@ public class AppConfig {
 	private String signalKEndpoint;
 
 	@Bean
-	public SignalKClientFactory signalKClientFactory(final ApplicationEventPublisher eventPublisher)
-			throws URISyntaxException {
+	public SignalKClientFactory signalKClientFactory(final ApplicationEventPublisher eventPublisher,
+			final RetryTemplate retryTemplate) throws URISyntaxException {
 
 		LOG.info("Initialising SignalKClientFactory");
 
-		return SignalKClientFactory.instance(new URI(signalKEndpoint), eventPublisher, signalKObjectMapper());
+		return SignalKClientFactory.instance(new URI(signalKEndpoint), eventPublisher, signalKObjectMapper(),
+				retryTemplate);
 	}
 
 	@Bean
