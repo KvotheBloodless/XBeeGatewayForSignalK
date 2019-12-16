@@ -14,7 +14,7 @@
 
 	<Loggers>
 
-		<Logger name="au.com.venilia.xbee_gateway_for_signalk"
+		<Logger name="au.com.venilia.xgsk"
 			level="trace" additivity="false">
 			<AppenderRef ref="application" />
 		</Logger>
