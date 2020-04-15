@@ -25,6 +25,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import au.com.venilia.xgsk.service.MessageTranslator;
+
 @ClientEndpoint
 public class SignalKClient {
 
@@ -33,6 +35,8 @@ public class SignalKClient {
 	private final String nodeId;
 
 	private final ObjectMapper objectMapper;
+
+	private final MessageTranslator messageTranslator;
 
 	private final BlockingQueue<JsonNode> outgoingQueue;
 
@@ -43,13 +47,16 @@ public class SignalKClient {
 
 	private XBeeClient xBeeClient;
 
-	public SignalKClient(final String nodeId, final ObjectMapper objectMapper, final RetryTemplate retryTemplate) {
+	public SignalKClient(final String nodeId, final MessageTranslator messageTranslator,
+			final ObjectMapper objectMapper, final RetryTemplate retryTemplate) {
 
 		this.log = LoggerFactory.getLogger(String.format("%s (%s)", getClass().getName(), nodeId));
 
 		this.nodeId = nodeId;
 
+		this.messageTranslator = messageTranslator;
 		this.objectMapper = objectMapper;
+
 		this.retryTemplate = retryTemplate;
 
 		outgoingQueue = new LinkedBlockingDeque<>();
@@ -109,7 +116,7 @@ public class SignalKClient {
 				final JsonNode message = objectMapper.readTree(data.trim());
 				log.debug("Message received: {}", message);
 
-				xBeeClient.signalKMessage(message);
+				xBeeClient.signalKMessage(messageTranslator.deflate(message));
 			} catch (final JsonProcessingException e) {
 
 				log.error("{} thrown on receipt of SignalK message", e.getClass().getSimpleName(), e);
@@ -142,22 +149,24 @@ public class SignalKClient {
 		private static SignalKClientFactory INSTANCE;
 
 		private final URI endpointUri;
+		private final MessageTranslator messageTranslator;
 		private final ObjectMapper objectMapper;
 		private final RetryTemplate retryTemplate;
 
-		public static SignalKClientFactory instance(final URI endpointUri, final ObjectMapper objectMapper,
-				final RetryTemplate retryTemplate) {
+		public static SignalKClientFactory instance(final URI endpointUri, final MessageTranslator messageTranslator,
+				final ObjectMapper objectMapper, final RetryTemplate retryTemplate) {
 
 			if (INSTANCE == null)
-				INSTANCE = new SignalKClientFactory(endpointUri, objectMapper, retryTemplate);
+				INSTANCE = new SignalKClientFactory(endpointUri, messageTranslator, objectMapper, retryTemplate);
 
 			return INSTANCE;
 		}
 
-		protected SignalKClientFactory(final URI endpointUri, final ObjectMapper objectMapper,
-				final RetryTemplate retryTemplate) {
+		protected SignalKClientFactory(final URI endpointUri, final MessageTranslator messageTranslator,
+				final ObjectMapper objectMapper, final RetryTemplate retryTemplate) {
 
 			this.endpointUri = endpointUri;
+			this.messageTranslator = messageTranslator;
 			this.objectMapper = objectMapper;
 			this.retryTemplate = retryTemplate;
 		}
@@ -166,7 +175,7 @@ public class SignalKClient {
 
 			LOG.info("Creating SignalKClient for node {}", nodeId);
 
-			final SignalKClient client = new SignalKClient(nodeId, objectMapper, retryTemplate);
+			final SignalKClient client = new SignalKClient(nodeId, messageTranslator, objectMapper, retryTemplate);
 
 			LOG.debug("Opening websocket to SignalK server at {} for node {}", endpointUri, nodeId);
 

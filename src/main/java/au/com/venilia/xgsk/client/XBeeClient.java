@@ -16,30 +16,28 @@ import com.digi.xbee.api.XBeeDevice;
 import com.digi.xbee.api.exceptions.XBeeException;
 import com.digi.xbee.api.listeners.IDataReceiveListener;
 import com.digi.xbee.api.models.XBeeMessage;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import au.com.venilia.xgsk.util.ByteUtils;
+import au.com.venilia.xgsk.service.MessageTranslator;
 
 public class XBeeClient implements IDataReceiveListener {
 
 	private final Logger log;
 
-	private ObjectMapper objectMapper;
+	private final MessageTranslator messageTranslator;
 
-	private final BlockingQueue<JsonNode> outgoingQueue;
+	private final BlockingQueue<byte[]> outgoingQueue;
 
 	private volatile boolean run = true;
 
 	private SignalKClient signalKClient;
 
-	public XBeeClient(final XBeeDevice localDevice, final RemoteXBeeDevice device, final ObjectMapper objectMapper,
-			final RetryTemplate retryTemplate) {
+	public XBeeClient(final XBeeDevice localDevice, final MessageTranslator messageTranslator,
+			final RemoteXBeeDevice device, final RetryTemplate retryTemplate) {
 
 		this.log = LoggerFactory.getLogger(String.format("%s (%s)", getClass().getName(), device.getNodeID()));
 
-		this.objectMapper = objectMapper;
+		this.messageTranslator = messageTranslator;
 
 		outgoingQueue = new LinkedBlockingDeque<>();
 		new Thread(new Runnable() {
@@ -50,28 +48,20 @@ public class XBeeClient implements IDataReceiveListener {
 				while (run)
 					try {
 
-						final JsonNode jsonNode = outgoingQueue.take();
-						log.trace("Sending message: {}", jsonNode);
+						final byte[] message = outgoingQueue.take();
+						log.trace("Sending message: {}", message);
 
 						try {
 
-							final byte[][] messages = ByteUtils.split(objectMapper.writeValueAsBytes(jsonNode),
-									(short) 47);
+							retryTemplate.execute(retryContext -> {
 
-							for (int i = 0; i < messages.length; i++) {
+								retryContext.setAttribute(RetryContext.NAME, device.getNodeID());
 
-								final byte[] message = messages[i];
+								localDevice.sendData(device, message);
 
-								retryTemplate.execute(retryContext -> {
-
-									retryContext.setAttribute(RetryContext.NAME, device.getNodeID());
-
-									localDevice.sendData(device, message);
-
-									return null;
-								});
-							}
-						} catch (final XBeeException | JsonProcessingException e) {
+								return null;
+							});
+						} catch (final XBeeException e) {
 
 							// If this fails permanently, the logging will be handled by the RetryListener
 							throw new RuntimeException(e);
@@ -84,7 +74,7 @@ public class XBeeClient implements IDataReceiveListener {
 		}).start();
 	}
 
-	public void signalKMessage(final JsonNode message) {
+	public void signalKMessage(final byte[] message) {
 
 		outgoingQueue.add(message);
 	}
@@ -94,7 +84,7 @@ public class XBeeClient implements IDataReceiveListener {
 
 		try {
 
-			final JsonNode message = objectMapper.readTree(xbeeMessage.getData());
+			final JsonNode message = messageTranslator.inflate(xbeeMessage.getData());
 			log.debug("Message received: {}", message);
 
 			signalKClient.xBeeMessage(message);
@@ -120,24 +110,26 @@ public class XBeeClient implements IDataReceiveListener {
 
 		private final XBeeDevice localDevice;
 
-		private final ObjectMapper objectMapper;
+		private final MessageTranslator messageTranslator;
+
 		private final RetryTemplate retryTemplate;
 
-		public static XBeeClientFactory instance(final XBeeDevice localDevice, final ObjectMapper objectMapper,
-				final RetryTemplate retryTemplate) {
+		public static XBeeClientFactory instance(final XBeeDevice localDevice,
+				final MessageTranslator messageTranslator, final RetryTemplate retryTemplate) {
 
 			if (INSTANCE == null)
-				INSTANCE = new XBeeClientFactory(localDevice, objectMapper, retryTemplate);
+				INSTANCE = new XBeeClientFactory(localDevice, messageTranslator, retryTemplate);
 
 			return INSTANCE;
 		}
 
-		protected XBeeClientFactory(final XBeeDevice localDevice, final ObjectMapper objectMapper,
+		protected XBeeClientFactory(final XBeeDevice localDevice, final MessageTranslator messageTranslator,
 				final RetryTemplate retryTemplate) {
 
 			this.localDevice = localDevice;
 
-			this.objectMapper = objectMapper;
+			this.messageTranslator = messageTranslator;
+
 			this.retryTemplate = retryTemplate;
 		}
 
@@ -145,7 +137,7 @@ public class XBeeClient implements IDataReceiveListener {
 
 			LOG.info("Creating XBeeClient for node {}", device.getNodeID());
 
-			return new XBeeClient(localDevice, device, objectMapper, retryTemplate);
+			return new XBeeClient(localDevice, messageTranslator, device, retryTemplate);
 		}
 	}
 

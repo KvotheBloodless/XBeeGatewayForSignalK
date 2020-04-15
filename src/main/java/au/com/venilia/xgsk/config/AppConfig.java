@@ -3,7 +3,6 @@ package au.com.venilia.xgsk.config;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +19,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import au.com.venilia.xgsk.client.SignalKClient.SignalKClientFactory;
 import au.com.venilia.xgsk.client.XBeeClient.XBeeClientFactory;
+import au.com.venilia.xgsk.service.MessageTranslator;
 import au.com.venilia.xgsk.service.XBeeNetworkDiscoveryService;
+import au.com.venilia.xgsk.service.impl.MinimisingMessageTranslatorImpl;
 
 @Configuration
 @ComponentScan("au.com.venilia.xgsk")
@@ -46,12 +47,10 @@ public class AppConfig {
 		return threadPoolTaskScheduler;
 	}
 
-	public static final String SIGNALK_OBJECTMAPPER = "signalk-mapper";
+	@Bean
+	public ObjectMapper objectMapper() {
 
-	@Bean(name = SIGNALK_OBJECTMAPPER)
-	public ObjectMapper signalKObjectMapper() {
-
-		LOG.info("Initialising signalk ObjectMapper");
+		LOG.info("Initialising ObjectMapper");
 
 		final ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.setDefaultPropertyInclusion(Include.NON_EMPTY);
@@ -59,37 +58,34 @@ public class AppConfig {
 		return objectMapper;
 	}
 
-	public static final String XBEE_OBJECTMAPPER = "xbee-mapper";
+	@Bean
+	public MessageTranslator messageTranslator() {
 
-	@Bean(name = XBEE_OBJECTMAPPER)
-	public ObjectMapper xbeeObjectMapper() {
+		LOG.info("Initialising MinimisingMessageTranslatorImpl");
 
-		LOG.info("Initialising xbee ObjectMapper");
-
-		final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
-		objectMapper.setDefaultPropertyInclusion(Include.NON_EMPTY);
-
-		return objectMapper;
+		return new MinimisingMessageTranslatorImpl(objectMapper());
 	}
 
 	@Value("${signalk.endpoint}")
 	private String signalKEndpoint;
 
 	@Bean
-	public SignalKClientFactory signalKClientFactory(final RetryTemplate retryTemplate) throws URISyntaxException {
+	public SignalKClientFactory signalKClientFactory(final RetryTemplate retryTemplate,
+			final MessageTranslator messageTranslator) throws URISyntaxException {
 
 		LOG.info("Initialising SignalKClientFactory");
 
-		return SignalKClientFactory.instance(new URI(signalKEndpoint), signalKObjectMapper(), retryTemplate);
+		return SignalKClientFactory.instance(new URI(signalKEndpoint), messageTranslator, objectMapper(),
+				retryTemplate);
 	}
 
 	@Bean
 	public XBeeClientFactory xbeeClientFactory(final XBeeNetworkDiscoveryService xbeeNetworkDiscoveryService,
-			final RetryTemplate retryTemplate) {
+			final MessageTranslator messageTranslator, final RetryTemplate retryTemplate) {
 
 		LOG.info("Initialising XBeeClientFactory");
 
-		return XBeeClientFactory.instance(xbeeNetworkDiscoveryService.getLocalInstance(), xbeeObjectMapper(),
+		return XBeeClientFactory.instance(xbeeNetworkDiscoveryService.getLocalInstance(), messageTranslator,
 				retryTemplate);
 	}
 }
