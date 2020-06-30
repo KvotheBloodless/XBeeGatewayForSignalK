@@ -25,10 +25,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import au.com.venilia.xbee_gateway_for_signalk.event.SignalKMessageEvent;
-import au.com.venilia.xbee_gateway_for_signalk.signalk.model.Attitude;
 import au.com.venilia.xbee_gateway_for_signalk.signalk.model.Delta;
-import au.com.venilia.xbee_gateway_for_signalk.signalk.model.Notification;
-import au.com.venilia.xbee_gateway_for_signalk.signalk.model.Position;
 import au.com.venilia.xbee_gateway_for_signalk.signalk.model.Subscribe;
 import au.com.venilia.xbee_gateway_for_signalk.signalk.model.Subscribe.Format;
 import au.com.venilia.xbee_gateway_for_signalk.signalk.model.Subscribe.Policy;
@@ -148,30 +145,29 @@ public class SignalKClient {
 
 	public static enum SignalKPath {
 
-		AUTOPILOT_STATE("steering.autopilot.state", Optional.empty(), Optional.empty(), false),
-		AUTOPILOT_MODE("steering.autopilot.mode", Optional.empty(), Optional.empty(), false),
-		APPARENT_WIND_SPEED("environment.wind.speedApparent", Optional.empty(), Optional.of(2000), true),
-		APPARENT_WIND_ANGLE("environment.wind.angleApparent", Optional.empty(), Optional.of(2000), true),
-		HEAVE("environment.heave", Optional.empty(), Optional.empty(), false),
-		COURSE_OVER_GROUND("navigation.courseOverGround", Optional.empty(), Optional.empty(), false),
-		DEPTH_BELOW_SURFACE("environment.depth.belowSurface", Optional.empty(), Optional.of(2000), true),
-		DEPTH_BELOW_TRANSDUCER("environment.depth.belowTransducer", Optional.empty(), Optional.empty(), false),
-		SURFACE_TO_TRANSDUCER("environment.depth.surfaceToTransducer", Optional.empty(), Optional.empty(), false),
-		POSITION("navigation.position", Optional.of(Position.class), Optional.of(4000), true),
-		ATTITUDE("navigation.attitude", Optional.of(Attitude.class), Optional.empty(), false),
-		HEADING_TRUE("navigation.headingTrue", Optional.empty(), Optional.empty(), false),
-		HEADING_MAGNETIC("navigation.headingMagnetic", Optional.empty(), Optional.of(4000), true),
-		RATE_OF_TURN("navigation.rateOfTurn", Optional.empty(), Optional.empty(), false),
-		SOG("environment.navigation.speedOverGround", Optional.empty(), Optional.empty(), false),
-		DATE_TIME("environment.navigation.datetime", Optional.empty(), Optional.of(60000), true),
-		COOLANT_TEMP("environment.propulsion.port.coolantTemperature", Optional.empty(), Optional.empty(), false),
-		OIL_TEMP("environment.propulsion.port.oilTemperature", Optional.empty(), Optional.empty(), false),
-		OIL_PRESSURE("environment.propulsion.port.oilPressure", Optional.empty(), Optional.empty(), false),
-		RUDDER_ANGLE("steering.rudderAngle", Optional.empty(), Optional.empty(), false),
-		NOTIFICATION_MOB("notifications.mob", Optional.of(Notification.class), Optional.empty(), true),
-		NOTIFICATION_ANCHOR_ALARM("notifications.navigation.anchor.currentRadius", Optional.of(Notification.class),
-				Optional.empty(), true);
-
+		COMFORT_LIGHTS_SWITCH("electrical.switches.bank.1.comfort_lighting.state", Optional.empty(), Optional.empty(),
+				true),
+		ENGINEERING_LIGHTS_SWITCH("electrical.switches.bank.1.engineering_lighting.state", Optional.empty(),
+				Optional.empty(), true),
+		DECK_LIGHTS_SWITCH("electrical.switches.bank.1.deck_lighting.state", Optional.empty(), Optional.empty(), true),
+		FANS_SWITCH("electrical.switches.bank.1.fans.state", Optional.empty(), Optional.empty(), true),
+		OUTLETS_SWITCH("electrical.switches.bank.1.outlets.state", Optional.empty(), Optional.empty(), true),
+		ENTERTAINMENT_SWITCH("electrical.switches.bank.1.entertainment.state", Optional.empty(), Optional.empty(), true),
+		INTERNET_SWITCH("electrical.switches.bank.1.internet.state", Optional.empty(), Optional.empty(), true),
+		FRESH_WATER_SWITCH("electrical.switches.bank.1.fresh_water.state", Optional.empty(), Optional.empty(), true),
+		REFRIGERATION_SWITCH("electrical.switches.bank.1.refrigeration.state", Optional.empty(), Optional.empty(), true),
+		INSTRUMENTATION_SWITCH("electrical.switches.bank.1.instrumentation.state", Optional.empty(), Optional.empty(), true),
+		WASTE_WATER_SWITCH("electrical.switches.bank.1.waste_water.state", Optional.empty(), Optional.empty(), true),
+		WASH_DOWN_SWITCH("electrical.switches.bank.1.wash_down.state", Optional.empty(), Optional.empty(), true),
+		RADIOS_SWITCH("electrical.switches.bank.1.radios.state", Optional.empty(), Optional.empty(), true),
+		AUTOPILOT_SWITCH("electrical.switches.bank.1.autopilot.state", Optional.empty(), Optional.empty(), true),
+		HYDRAULICS_SWITCH("electrical.switches.bank.1.hydraulics.state", Optional.empty(), Optional.empty(), true),
+		VENTILATION_SWITCH("electrical.switches.bank.1.ventilation.state", Optional.empty(), Optional.empty(), true),
+		ANCHOR_LIGHT_SWITCH("electrical.switches.bank.1.anchor_light.state", Optional.empty(), Optional.empty(), true),
+		NAVIGATION_LIGHTS_SWITCH("electrical.switches.bank.1.navigation_lights.state", Optional.empty(), Optional.empty(), true),
+		STEAMING_LIGHT_SWITCH("electrical.switches.bank.1.steaming_light.state", Optional.empty(), Optional.empty(), true),
+		RED_OVER_GREEN_LIGHTS_SWITCH("electrical.switches.bank.1.red_over_green_lights.state", Optional.empty(), Optional.empty(), true);
+		
 		private final String path;
 
 		private final Optional<Class<? extends Object>> objectType;

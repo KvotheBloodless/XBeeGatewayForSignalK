@@ -94,7 +94,7 @@ public class App implements ServiceListener {
 	@Override
 	public void serviceAdded(final ServiceEvent event) {
 
-		LOG.debug("Network service added: " + event.getInfo());
+		LOG.debug("Signalk service added: " + event.getInfo());
 
 		signalKClientManager.setEndpointUri(URI.create(event.getInfo().getURLs("ws")[0] + "/v1/stream"));
 	}
@@ -102,12 +102,12 @@ public class App implements ServiceListener {
 	@Override
 	public void serviceRemoved(final ServiceEvent event) {
 
-		LOG.debug("Network service removed: " + event.getInfo());
+		LOG.debug("Signalk service removed: " + event.getInfo());
 	}
 
 	@Override
 	public void serviceResolved(final ServiceEvent event) {
 
-		LOG.debug("Network service resolved: " + event.getInfo());
+		LOG.debug("Signalk service resolved: " + event.getInfo());
 	}
 }
