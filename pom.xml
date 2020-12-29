@@ -35,7 +35,7 @@
 		<guava.version>28.1-jre</guava.version>
 		<aspectj.version>1.9.6</aspectj.version>
 		<jSerialComm.version>2.5.3</jSerialComm.version>
-		<log4j.version>2.12.1</log4j.version>
+		<log4j.version>2.13.3</log4j.version>
 		<slf4j.version>1.8.0-beta4</slf4j.version>
 		<disruptor.version>3.4.2</disruptor.version>
 	</properties>
