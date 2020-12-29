@@ -3,10 +3,6 @@ package au.com.venilia.xbee_gateway_for_signalk;
 import java.io.IOException;
 import java.net.URI;
 
-import javax.jmdns.JmDNS;
-import javax.jmdns.ServiceEvent;
-import javax.jmdns.ServiceListener;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -19,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import au.com.venilia.xbee_gateway_for_signalk.util.SignalKClientManager;
+import au.com.venilia.xbee_gateway_for_signalk.rxtx.SignalKRXManager;
 
-public class App implements ServiceListener {
+public class App {
 
 	static {
 
@@ -32,8 +28,6 @@ public class App implements ServiceListener {
 	private static final Logger LOG = LoggerFactory.getLogger(App.class);
 
 	private static ApplicationContext context;
-
-	private static SignalKClientManager signalKClientManager;
 
 	public App(/* include parameters as required */) {
 
@@ -53,19 +47,12 @@ public class App implements ServiceListener {
 
 			context = new AnnotationConfigApplicationContext("au.com.venilia.xbee_gateway_for_signalk");
 
-			signalKClientManager = context.getBean(SignalKClientManager.class);
-
-			if (commandLine.getOptionValue("signalk") != null)
-				signalKClientManager.setEndpointUri(URI
-						.create("ws://" + commandLine.getOptionValue("signalk") + "/signalk/v1/stream?subscribe=none"));
+			context.getBean(SignalKRXManager.class).setEndpointUri(
+					URI.create("ws://" + commandLine.getOptionValue("signalk") + "/signalk/v1/stream?subscribe=none"));
 		} catch (final ParseException parseException) {
 
 			System.exit(-1);
 		}
-
-		// Create a JmDNS instance and add a service listener
-		final JmDNS jmDNS = JmDNS.create();
-		jmDNS.addServiceListener("_signalk-ws._tcp.local.", new App());
 	}
 
 	private static CommandLine parseCliArguments(String... args) throws ParseException {
@@ -73,7 +60,7 @@ public class App implements ServiceListener {
 		final Options options = new Options();
 
 		final Option a = new Option("k", "signalk", true, "SignalK host:port");
-		a.setRequired(false);
+		a.setRequired(true);
 		options.addOption(a);
 
 		final CommandLineParser parser = new DefaultParser();
@@ -89,25 +76,5 @@ public class App implements ServiceListener {
 			formatter.printHelp("java -jar anchor-[version].jar <options>", options);
 			throw e;
 		}
-	}
-
-	@Override
-	public void serviceAdded(final ServiceEvent event) {
-
-		LOG.debug("Signalk service added: " + event.getInfo());
-
-		signalKClientManager.setEndpointUri(URI.create(event.getInfo().getURLs("ws")[0] + "/v1/stream"));
-	}
-
-	@Override
-	public void serviceRemoved(final ServiceEvent event) {
-
-		LOG.debug("Signalk service removed: " + event.getInfo());
-	}
-
-	@Override
-	public void serviceResolved(final ServiceEvent event) {
-
-		LOG.debug("Signalk service resolved: " + event.getInfo());
 	}
 }

@@ -15,10 +15,15 @@
 	<Loggers>
 
 		<Logger name="au.com.venilia.xbee_gateway_for_signalk"
-			level="trace" additivity="false">
+			level="debug" additivity="false">
 			<AppenderRef ref="application" />
 		</Logger>
-
+		
+		<Logger name="com.digi.xbee.api"
+			level="info" additivity="false">
+			<AppenderRef ref="application" />
+		</Logger>
+		
 		<Root level="info" includeLocation="true">
 			<AppenderRef ref="application" />
 		</Root>

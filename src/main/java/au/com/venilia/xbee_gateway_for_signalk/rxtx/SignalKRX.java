@@ -1,4 +1,4 @@
-package au.com.venilia.xbee_gateway_for_signalk.util;
+package au.com.venilia.xbee_gateway_for_signalk.rxtx;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -33,9 +33,9 @@ import au.com.venilia.xbee_gateway_for_signalk.signalk.model.Update;
 import au.com.venilia.xbee_gateway_for_signalk.signalk.model.Value__2;
 
 @ClientEndpoint
-public class SignalKClient {
+public class SignalKRX {
 
-	private static final Logger LOG = LoggerFactory.getLogger(SignalKClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SignalKRX.class);
 
 	@Autowired
 	private ApplicationEventPublisher publisher;
@@ -43,7 +43,7 @@ public class SignalKClient {
 	@Autowired
 	private ObjectMapper objectMapper;
 
-	@Value("${signalk.subscription.defaultPeriodMillis:10000}")
+	@Value("${signalk.subscription.defaultPeriodMillis:1000}")
 	private int defaultPeriod;
 
 	private Session userSession = null;
@@ -55,14 +55,14 @@ public class SignalKClient {
 
 		final Delta message = new Delta();
 
-		message.setContext(SignalKClient.SELF);
+		message.setContext(SignalKRX.SELF);
 
 		final Subscribe subscribe = new Subscribe();
 
 		subscribe.setPath(path.path());
 		subscribe.setPeriod(period.orElse(defaultPeriod));
 		subscribe.setFormat(Format.DELTA);
-		subscribe.setPolicy(Policy.INSTANT);
+		subscribe.setPolicy(Policy.FIXED);
 		if (minPeriod.isPresent())
 			subscribe.setMinPeriod(minPeriod.get());
 
@@ -107,10 +107,10 @@ public class SignalKClient {
 
 						try {
 
-							final SignalKMessageEvent event = new SignalKMessageEvent(SignalKClient.SELF,
-									SignalKPath.fromPath(value.getPath()), value.getValue());
+							final SignalKMessageEvent event = new SignalKMessageEvent(SignalKRX.SELF,
+									SignalKPath.fromPath(value.getPath()), Integer.valueOf(value.getValue()));
 
-							LOG.trace("SignalK event - {}", event);
+							LOG.info("SignalK event - {}", event);
 
 							publisher.publishEvent(event);
 						} catch (final EnumConstantNotPresentException e) {
@@ -145,43 +145,64 @@ public class SignalKClient {
 
 	public static enum SignalKPath {
 
-		COMFORT_LIGHTS_SWITCH("electrical.switches.bank.1.comfort_lighting.state", Optional.empty(), Optional.empty(),
+		COMFORT_LIGHTS_SWITCH("electrical.switches.bank.107.comfort_lighting.state", Optional.empty(), Optional.empty(),
+				new char[] { 'a' }, true),
+		ENGINEERING_LIGHTS_SWITCH("electrical.switches.bank.107.engineering_lighting.state", Optional.empty(),
+				Optional.empty(), new char[] { 'b' }, true),
+		DECK_LIGHTS_SWITCH("electrical.switches.bank.107.deck_lighting.state", Optional.empty(), Optional.empty(),
+				new char[] { 'p', 'u', 'v' }, true),
+		FANS_SWITCH("electrical.switches.bank.107.fans.state", Optional.empty(), Optional.empty(), new char[] { 'e' },
 				true),
-		ENGINEERING_LIGHTS_SWITCH("electrical.switches.bank.1.engineering_lighting.state", Optional.empty(),
-				Optional.empty(), true),
-		DECK_LIGHTS_SWITCH("electrical.switches.bank.1.deck_lighting.state", Optional.empty(), Optional.empty(), true),
-		FANS_SWITCH("electrical.switches.bank.1.fans.state", Optional.empty(), Optional.empty(), true),
-		OUTLETS_SWITCH("electrical.switches.bank.1.outlets.state", Optional.empty(), Optional.empty(), true),
-		ENTERTAINMENT_SWITCH("electrical.switches.bank.1.entertainment.state", Optional.empty(), Optional.empty(), true),
-		INTERNET_SWITCH("electrical.switches.bank.1.internet.state", Optional.empty(), Optional.empty(), true),
-		FRESH_WATER_SWITCH("electrical.switches.bank.1.fresh_water.state", Optional.empty(), Optional.empty(), true),
-		REFRIGERATION_SWITCH("electrical.switches.bank.1.refrigeration.state", Optional.empty(), Optional.empty(), true),
-		INSTRUMENTATION_SWITCH("electrical.switches.bank.1.instrumentation.state", Optional.empty(), Optional.empty(), true),
-		WASTE_WATER_SWITCH("electrical.switches.bank.1.waste_water.state", Optional.empty(), Optional.empty(), true),
-		WASH_DOWN_SWITCH("electrical.switches.bank.1.wash_down.state", Optional.empty(), Optional.empty(), true),
-		RADIOS_SWITCH("electrical.switches.bank.1.radios.state", Optional.empty(), Optional.empty(), true),
-		AUTOPILOT_SWITCH("electrical.switches.bank.1.autopilot.state", Optional.empty(), Optional.empty(), true),
-		HYDRAULICS_SWITCH("electrical.switches.bank.1.hydraulics.state", Optional.empty(), Optional.empty(), true),
-		VENTILATION_SWITCH("electrical.switches.bank.1.ventilation.state", Optional.empty(), Optional.empty(), true),
-		ANCHOR_LIGHT_SWITCH("electrical.switches.bank.1.anchor_light.state", Optional.empty(), Optional.empty(), true),
-		NAVIGATION_LIGHTS_SWITCH("electrical.switches.bank.1.navigation_lights.state", Optional.empty(), Optional.empty(), true),
-		STEAMING_LIGHT_SWITCH("electrical.switches.bank.1.steaming_light.state", Optional.empty(), Optional.empty(), true),
-		RED_OVER_GREEN_LIGHTS_SWITCH("electrical.switches.bank.1.red_over_green_lights.state", Optional.empty(), Optional.empty(), true);
-		
+		OUTLETS_SWITCH("electrical.switches.bank.107.outlets.state", Optional.empty(), Optional.empty(),
+				new char[] { 'd' }, true),
+		ENTERTAINMENT_SWITCH("electrical.switches.bank.107.entertainment.state", Optional.empty(), Optional.empty(),
+				new char[] { 'k' }, true),
+		INTERNET_SWITCH("electrical.switches.bank.107.internet.state", Optional.empty(), Optional.empty(),
+				new char[] { 'j' }, true),
+		FRESH_WATER_SWITCH("electrical.switches.bank.107.fresh_water.state", Optional.empty(), Optional.empty(),
+				new char[] { 'g' }, true),
+		REFRIGERATION_SWITCH("electrical.switches.bank.107.refrigeration.state", Optional.empty(), Optional.empty(),
+				new char[] { 'l' }, true),
+		INSTRUMENTATION_SWITCH("electrical.switches.bank.107.instrumentation.state", Optional.empty(), Optional.empty(),
+				new char[] { 's' }, true),
+		WASTE_WATER_SWITCH("electrical.switches.bank.107.waste_water.state", Optional.empty(), Optional.empty(),
+				new char[] { 'h' }, true),
+		WASH_DOWN_SWITCH("electrical.switches.bank.107.wash_down.state", Optional.empty(), Optional.empty(),
+				new char[] { 'i' }, true),
+		RADIOS_SWITCH("electrical.switches.bank.107.radios.state", Optional.empty(), Optional.empty(),
+				new char[] { 't' }, true),
+		AUTOPILOT_SWITCH("electrical.switches.bank.107.autopilot.state", Optional.empty(), Optional.empty(),
+				new char[] { 'r' }, true),
+		HYDRAULICS_SWITCH("electrical.switches.bank.107.hydraulics.state", Optional.empty(), Optional.empty(),
+				new char[] { 'c' }, true),
+		VENTILATION_SWITCH("electrical.switches.bank.107.ventilation.state", Optional.empty(), Optional.empty(),
+				new char[] { 'f' }, true),
+		ANCHOR_LIGHT_SWITCH("electrical.switches.bank.107.anchor_light.state", Optional.empty(), Optional.empty(),
+				new char[] { 'm' }, true),
+		NAVIGATION_LIGHTS_SWITCH("electrical.switches.bank.107.navigation_lights.state", Optional.empty(),
+				Optional.empty(), new char[] { 'q' }, true),
+		STEAMING_LIGHT_SWITCH("electrical.switches.bank.107.steaming_light.state", Optional.empty(), Optional.empty(),
+				new char[] { 'n' }, true),
+		RED_OVER_GREEN_LIGHTS_SWITCH("electrical.switches.bank.107.red_over_green_lights.state", Optional.empty(),
+				Optional.empty(), new char[] { 'o' }, true);
+
 		private final String path;
 
 		private final Optional<Class<? extends Object>> objectType;
 
 		private final Optional<Integer> minPeriod;
 
+		private final char[] circuits;
+
 		private final boolean subscribe;
 
 		SignalKPath(final String path, final Optional<Class<? extends Object>> objectType,
-				final Optional<Integer> minPeriod, final boolean subscribe) {
+				final Optional<Integer> minPeriod, final char[] circuits, final boolean subscribe) {
 
 			this.path = path;
 			this.objectType = objectType;
 			this.minPeriod = minPeriod;
+			this.circuits = circuits;
 			this.subscribe = subscribe;
 		}
 
@@ -198,6 +219,11 @@ public class SignalKClient {
 		public Optional<Integer> getMinPeriod() {
 
 			return minPeriod;
+		}
+
+		public char[] circuits() {
+
+			return circuits;
 		}
 
 		public boolean subscribe() {

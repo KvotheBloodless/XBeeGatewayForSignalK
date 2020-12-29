@@ -1,4 +1,4 @@
-package au.com.venilia.xbee_gateway_for_signalk.util;
+package au.com.venilia.xbee_gateway_for_signalk.rxtx;
 
 import java.io.IOException;
 import java.net.URI;
@@ -12,13 +12,13 @@ import javax.websocket.WebSocketContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import au.com.venilia.xbee_gateway_for_signalk.util.SignalKClient.SignalKPath;
+import au.com.venilia.xbee_gateway_for_signalk.rxtx.SignalKRX.SignalKPath;
 
-public class SignalKClientManager {
+public class SignalKRXManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SignalKClientManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SignalKRXManager.class);
 
-    private SignalKClient client;
+    private SignalKRX client;
     private long connectDelay;
 
     private Thread maintainConnectionThread;
@@ -28,7 +28,7 @@ public class SignalKClientManager {
 
     private URI endpointUri;
 
-    public SignalKClientManager(final SignalKClient client, final long connectDelay) {
+    public SignalKRXManager(final SignalKRX client, final long connectDelay) {
 
         this.client = client;
         this.connectDelay = connectDelay;

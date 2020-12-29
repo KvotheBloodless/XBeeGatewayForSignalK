@@ -1,4 +1,4 @@
-package au.com.venilia.xbee_gateway_for_signalk.util;
+package au.com.venilia.xbee_gateway_for_signalk.rxtx;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
