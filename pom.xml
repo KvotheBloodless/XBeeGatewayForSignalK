@@ -31,7 +31,7 @@
 		<jackson.version>2.10.1</jackson.version>
 		<commons-cli.version>1.4</commons-cli.version>
 		<commons-lang.version>3.9</commons-lang.version>
-		<commons-io.version>2.6</commons-io.version>
+		<commons-io.version>2.7</commons-io.version>
 		<guava.version>28.1-jre</guava.version>
 		<aspectj.version>1.9.6</aspectj.version>
 		<jSerialComm.version>2.5.3</jSerialComm.version>
