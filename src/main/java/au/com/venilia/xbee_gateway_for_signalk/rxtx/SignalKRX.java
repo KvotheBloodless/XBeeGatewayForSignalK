@@ -147,20 +147,12 @@ public class SignalKRX {
 
 		DECK_LIGHTS_SWITCH("electrical.switches.bank.0.deck_lights.state", Optional.empty(), Optional.empty(),
 				new char[] { 'p', 'u', 'v' }, true),
-		INTERNET_SWITCH("electrical.switches.bank.0.internet.state", Optional.empty(), Optional.empty(),
-				new char[] { 'j' }, true),
-		REFRIGERATION_SWITCH("electrical.switches.bank.0.refrigeration.state", Optional.empty(), Optional.empty(),
-				new char[] { 'l' }, true),
-		INSTRUMENTATION_SWITCH("electrical.switches.bank.0.instrumentation.state", Optional.empty(), Optional.empty(),
-				new char[] { 's' }, true),
 		WASH_DOWN_SWITCH("electrical.switches.bank.0.washdown.state", Optional.empty(), Optional.empty(),
 				new char[] { 'i' }, true),
 		AUTOPILOT_SWITCH("electrical.switches.bank.0.autopilot.state", Optional.empty(), Optional.empty(),
 				new char[] { 'r' }, true),
 		HYDRAULICS_SWITCH("electrical.switches.bank.0.hydraulics.state", Optional.empty(), Optional.empty(),
 				new char[] { 'c' }, true),
-		VENTILATION_SWITCH("electrical.switches.bank.0.ventilation.state", Optional.empty(), Optional.empty(),
-				new char[] { 'f' }, true),
 		ANCHOR_LIGHT_SWITCH("electrical.switches.bank.1.anchor_light.state", Optional.empty(), Optional.empty(),
 				new char[] { 'm' }, true),
 		NAVIGATION_LIGHTS_SWITCH("electrical.switches.bank.1.navigation_lights.state", Optional.empty(),
@@ -184,7 +176,15 @@ public class SignalKRX {
 		WASTE_WATER_SWITCH("electrical.switches.bank.3.waste_water.state", Optional.empty(), Optional.empty(),
 				new char[] { 'h' }, true),
 		RADIOS_SWITCH("electrical.switches.bank.3.radios.state", Optional.empty(), Optional.empty(),
-				new char[] { 't' }, true);
+				new char[] { 't' }, true),
+		INSTRUMENTATION_SWITCH("electrical.switches.bank.0.instrumentation.state", Optional.empty(), Optional.empty(),
+				new char[] { 's' }, true),
+		INTERNET_SWITCH("electrical.switches.bank.0.internet.state", Optional.empty(), Optional.empty(),
+				new char[] { 'j' }, true),
+		REFRIGERATION_SWITCH("electrical.switches.bank.0.refrigeration.state", Optional.empty(), Optional.empty(),
+				new char[] { 'l' }, true),
+		VENTILATION_SWITCH("electrical.switches.bank.0.ventilation.state", Optional.empty(), Optional.empty(),
+				new char[] { 'f' }, true);
 
 		private final String path;
 
