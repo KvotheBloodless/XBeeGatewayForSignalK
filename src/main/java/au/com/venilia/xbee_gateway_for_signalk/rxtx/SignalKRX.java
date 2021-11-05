@@ -177,13 +177,13 @@ public class SignalKRX {
 				new char[] { 'h' }, true),
 		RADIOS_SWITCH("electrical.switches.bank.3.radios.state", Optional.empty(), Optional.empty(),
 				new char[] { 't' }, true),
-		INSTRUMENTATION_SWITCH("electrical.switches.bank.0.instrumentation.state", Optional.empty(), Optional.empty(),
+		INSTRUMENTATION_SWITCH("electrical.switches.bank.4.instrumentation.state", Optional.empty(), Optional.empty(),
 				new char[] { 's' }, true),
-		INTERNET_SWITCH("electrical.switches.bank.0.internet.state", Optional.empty(), Optional.empty(),
+		INTERNET_SWITCH("electrical.switches.bank.4.internet.state", Optional.empty(), Optional.empty(),
 				new char[] { 'j' }, true),
-		REFRIGERATION_SWITCH("electrical.switches.bank.0.refrigeration.state", Optional.empty(), Optional.empty(),
+		REFRIGERATION_SWITCH("electrical.switches.bank.4.refrigeration.state", Optional.empty(), Optional.empty(),
 				new char[] { 'l' }, true),
-		VENTILATION_SWITCH("electrical.switches.bank.0.ventilation.state", Optional.empty(), Optional.empty(),
+		VENTILATION_SWITCH("electrical.switches.bank.4.ventilation.state", Optional.empty(), Optional.empty(),
 				new char[] { 'f' }, true);
 
 		private final String path;
