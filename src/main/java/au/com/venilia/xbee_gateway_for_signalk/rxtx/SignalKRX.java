@@ -177,13 +177,13 @@ public class SignalKRX {
 				new char[] { 'c' }, true),
 		VENTILATION_SWITCH("electrical.switches.bank.0.ventilation.state", Optional.empty(), Optional.empty(),
 				new char[] { 'f' }, true),
-		ANCHOR_LIGHT_SWITCH("electrical.switches.bank.0.anchor_light.state", Optional.empty(), Optional.empty(),
+		ANCHOR_LIGHT_SWITCH("electrical.switches.bank.1.anchor_light.state", Optional.empty(), Optional.empty(),
 				new char[] { 'm' }, true),
-		NAVIGATION_LIGHTS_SWITCH("electrical.switches.bank.0.navigation_lights.state", Optional.empty(),
+		NAVIGATION_LIGHTS_SWITCH("electrical.switches.bank.1.navigation_lights.state", Optional.empty(),
 				Optional.empty(), new char[] { 'q' }, true),
-		STEAMING_LIGHT_SWITCH("electrical.switches.bank.0.steaming_light.state", Optional.empty(), Optional.empty(),
+		STEAMING_LIGHT_SWITCH("electrical.switches.bank.1.steaming_light.state", Optional.empty(), Optional.empty(),
 				new char[] { 'n' }, true),
-		RED_OVER_GREEN_LIGHTS_SWITCH("electrical.switches.bank.0.red_over_green_lights.state", Optional.empty(),
+		RED_OVER_GREEN_LIGHTS_SWITCH("electrical.switches.bank.1.red_over_green_lights.state", Optional.empty(),
 				Optional.empty(), new char[] { 'o' }, true);
 
 		private final String path;
