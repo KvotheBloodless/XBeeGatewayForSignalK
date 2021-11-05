@@ -145,22 +145,14 @@ public class SignalKRX {
 
 	public static enum SignalKPath {
 
-		COMFORT_LIGHTS_SWITCH("electrical.switches.bank.0.comfort_lighting.state", Optional.empty(), Optional.empty(),
-				new char[] { 'a' }, true),
 		ENGINEERING_LIGHTS_SWITCH("electrical.switches.bank.0.engineering_lighting.state", Optional.empty(),
 				Optional.empty(), new char[] { 'b' }, true),
 		DECK_LIGHTS_SWITCH("electrical.switches.bank.0.deck_lights.state", Optional.empty(), Optional.empty(),
 				new char[] { 'p', 'u', 'v' }, true),
-		FANS_SWITCH("electrical.switches.bank.0.fans.state", Optional.empty(), Optional.empty(), new char[] { 'e' },
-				true),
 		OUTLETS_SWITCH("electrical.switches.bank.0.outlets.state", Optional.empty(), Optional.empty(),
 				new char[] { 'd' }, true),
-		ENTERTAINMENT_SWITCH("electrical.switches.bank.0.entertainment.state", Optional.empty(), Optional.empty(),
-				new char[] { 'k' }, true),
 		INTERNET_SWITCH("electrical.switches.bank.0.internet.state", Optional.empty(), Optional.empty(),
 				new char[] { 'j' }, true),
-		FRESH_WATER_SWITCH("electrical.switches.bank.0.fresh_water.state", Optional.empty(), Optional.empty(),
-				new char[] { 'g' }, true),
 		REFRIGERATION_SWITCH("electrical.switches.bank.0.refrigeration.state", Optional.empty(), Optional.empty(),
 				new char[] { 'l' }, true),
 		INSTRUMENTATION_SWITCH("electrical.switches.bank.0.instrumentation.state", Optional.empty(), Optional.empty(),
@@ -184,7 +176,15 @@ public class SignalKRX {
 		STEAMING_LIGHT_SWITCH("electrical.switches.bank.1.steaming_light.state", Optional.empty(), Optional.empty(),
 				new char[] { 'n' }, true),
 		RED_OVER_GREEN_LIGHTS_SWITCH("electrical.switches.bank.1.red_over_green_lights.state", Optional.empty(),
-				Optional.empty(), new char[] { 'o' }, true);
+				Optional.empty(), new char[] { 'o' }, true),
+		FANS_SWITCH("electrical.switches.bank.2.fans.state", Optional.empty(), Optional.empty(), new char[] { 'e' },
+				true),
+		COMFORT_LIGHTS_SWITCH("electrical.switches.bank.2.comfort_lighting.state", Optional.empty(), Optional.empty(),
+				new char[] { 'a' }, true),
+		FRESH_WATER_SWITCH("electrical.switches.bank.2.fresh_water.state", Optional.empty(), Optional.empty(),
+				new char[] { 'g' }, true),
+		ENTERTAINMENT_SWITCH("electrical.switches.bank.2.entertainment.state", Optional.empty(), Optional.empty(),
+				new char[] { 'k' }, true);
 
 		private final String path;
 
